@@ -6,12 +6,20 @@ import (
 	"os/exec"
 	"path/filepath"
 	"slices"
+	"strings"
 
 	"golang.org/x/tools/go/packages"
 )
 
 func main() {
-	args := append([]string{"run", "--", "@io_bazel_rules_go//go/tools/gopackagesdriver"}, os.Args[1:]...)
+	queries := os.Args[1:]
+	for i, query := range queries {
+		if strings.HasPrefix(query, "file=") && strings.HasSuffix(query, ".templ") {
+			queries[i] = strings.TrimSuffix(query, ".templ") + "_templ.go"
+		}
+	}
+
+	args := append([]string{"run", "--", "@rules_go//go/tools/gopackagesdriver"}, queries...)
 	cmd := exec.Command("bazel", args...)
 	cmd.Stdin = os.Stdin
 	cmd.Stderr = os.Stderr
